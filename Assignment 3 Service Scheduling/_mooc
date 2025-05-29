@@ -1,1 +1,99 @@
-{"assignmentKey":"4gQScFIVtK","name":"Assignment 3 Service Scheduling","moocName":"FIT5216 S1 2025","moocPasswordString":"Submission token","submissionURL":"https://autograder.optimisation-2020.cloud.edu.au/api/index.php","solutionAssignments":[{"id":"lOAbpfLS7S","model":"models/service.mzn","data":"data/service1.dzn","timeout":"60","name":"Service 1"},{"id":"2IdRGQNcqL","model":"models/service.mzn","data":"data/service2.dzn","timeout":"60","name":"Service 2"},{"id":"qp9VMXaErW","model":"models/service.mzn","data":"data/service3.dzn","timeout":"60","name":"Service 3"},{"id":"0BmKNUukHc","model":"models/service.mzn","data":"data/service4.dzn","timeout":"60","name":"Service 4"},{"id":"xlOHQsKaRm","model":"models/service.mzn","data":"data/service5.dzn","timeout":"60","name":"Service 5"},{"id":"nX1TcZPk7I","model":"models/service.mzn","data":"data/service6.dzn","timeout":"60","name":"Service 6"},{"id":"Qg9QtjK6k6","model":"models/service.mzn","data":"data/service7.dzn","timeout":"60","name":"Service 7"},{"id":"IiPWMjxenB","model":"models/service.mzn","data":"data/service8.dzn","timeout":"60","name":"Service 8"},{"id":"9m3ZBoIjtq","model":"models/service.mzn","data":"data/service9.dzn","timeout":"60","name":"Service 9"},{"id":"E5BOJWaAjZ","model":"models/service.mzn","data":"data/service10.dzn","timeout":"60","name":"Service 10"}],"modelAssignments":[{"id":"LXZK9u54uu","model":"models/service.mzn","name":"Service Model 1"}],"sendMeta":true,"history":{"uuid":"180bfbc5-cb5d-f157-ad53-8bee89df9c7a","parent":null,"files":{"models/service.mzn":{"changes":[],"snapshot":"%%%% Service and Maintenance scheduling\r\nint: endtime;                   % latest time to be scheduled\r\nset of int: TIME = 0..endtime;\r\nenum SERVICE;                   % services to be scheduled\r\narray[SERVICE] of TIME: start;  % start time of service\r\narray[SERVICE] of TIME: end;    % end time of service\r\nenum STYPE;\r\narray[SERVICE] of STYPE: stype; % type of each service\r\n\r\nenum TRUCK;                      % truck \r\nTRUCK: dtruck;                   % dummy truck\r\nenum TTYPE = { SML, MED, LRG, DUMMY };  % truck type\r\narray[TRUCK] of TTYPE: ttype;    % type of each truck\r\narray[TRUCK] of int: prework;    % units of work since last major maintenance\r\nconstraint assert(forall(t in TRUCK)(ttype[t] = DUMMY <-> t = dtruck),\"dummy type only for dtruck\\n\");\r\narray[TTYPE] of int: maxsty;     % max service types for each truck type\r\n\r\nenum MAINTYPE = { NO, SH, LG, MJ }; % NO means no maintenance\r\narray[MAINTYPE] of int: maintdur; % duration of maintenance\r\narray[MAINTYPE] of int: maxsep;   % max elapsed time since last maint of this type or higher\r\nconstraint assert(maintdur[NO] = 0 /\\ maxsep[NO] = 0, \"rules for empty maintenance\\n\");\r\n\r\nint: minwork;                   % minimal percentage of time each truck that works is working\r\nint: minservice;                % minimal percentage of services performed\r\n\r\nint: majorwork;                 % amount of work allowed before major maintenance required\r\n\r\n\r\narray[SERVICE] of var TRUCK: truck; % which truck takes each service: dtruck if none\r\n\r\nint: maxmaint;\r\nset of int: MAINT = 1..maxmaint;\r\narray[TRUCK,MAINT] of var MAINTYPE: mt; % maintenance for each truck NO means not used.\r\narray[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck\r\n"}}},"submissionTerms":"By submitting this work you guarantee that no generative AI was used to complete the project, and that the submission is all your own work, without collaboration or collusion with others."}
+{
+    "assignmentKey": "4gQScFIVtK",
+    "history": {
+        "files": {
+            "models/service.mzn": {
+                "changes": [
+                ],
+                "snapshot": "%%%% Service and Maintenance scheduling\nint: endtime;                   % latest time to be scheduled\nset of int: TIME = 0..endtime;\nenum SERVICE;                   % services to be scheduled\narray[SERVICE] of TIME: start;  % start time of service\narray[SERVICE] of TIME: end;    % end time of service\nenum STYPE;\narray[SERVICE] of STYPE: stype; % type of each service\n\nenum TRUCK;                      % truck \nTRUCK: dtruck;                   % dummy truck\nenum TTYPE = { SML, MED, LRG, DUMMY };  % truck type\narray[TRUCK] of TTYPE: ttype;    % type of each truck\narray[TRUCK] of int: prework;    % units of work since last major maintenance\nconstraint assert(forall(t in TRUCK)(ttype[t] = DUMMY <-> t = dtruck),\"dummy type only for dtruck\\n\");\narray[TTYPE] of int: maxsty;     % max service types for each truck type\n\nenum MAINTYPE = { NO, SH, LG, MJ }; % NO means no maintenance\narray[MAINTYPE] of int: maintdur; % duration of maintenance\narray[MAINTYPE] of int: maxsep;   % max elapsed time since last maint of this type or higher\nconstraint assert(maintdur[NO] = 0 /\\ maxsep[NO] = 0, \"rules for empty maintenance\\n\");\n\nint: minwork;                   % minimal percentage of time each truck that works is working\nint: minservice;                % minimal percentage of services performed\n\nint: majorwork;                 % amount of work allowed before major maintenance required\n\n\narray[SERVICE] of var TRUCK: truck; % which truck takes each service: dtruck if none\n\nint: maxmaint;\nset of int: MAINT = 1..maxmaint;\narray[TRUCK,MAINT] of var MAINTYPE: mt; % maintenance for each truck NO means not used.\narray[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck\n\ninclude \"globals.mzn\";\n\n\n% ===== Stage A: Assigning Services =====\n% the same truck cannot overlap in time (except dummy truck DD)\narray[SERVICE] of int: service_duration = [end[s] - start[s] | s in SERVICE];\nconstraint forall(t in TRUCK where t != dtruck)(\n    cumulative(\n        [start[s] | s in SERVICE] ++ [ms[t,m] | m in MAINT],\n        [service_duration[s] | s in SERVICE] ++ [maintdur[mt[t,m]] | m in MAINT],\n        [bool2int(truck[s] = t) | s in SERVICE] ++ [bool2int(mt[t,m] != NO) | m in MAINT],\n        1\n    )\n);\n\n% ===== Stage B: Truck Usage, Service Guarantee =====\n% total work time of each truck\narray[TRUCK] of var 0..sum(service_duration): truck_worktime;\nconstraint forall(t in TRUCK)(\n    truck_worktime[t] = sum(s in SERVICE)(\n        bool2int(truck[s] = t) * service_duration[s]\n    )\n);\n           \n% the work time of each truck must meet the threshold - minwork\nconstraint forall(t in TRUCK where t != dtruck)(\n                 (truck_worktime[t] > 0) -> (truck_worktime[t] * 100 >= minwork * endtime)\n);\n\n% the num of completed services\nvar 0..card(SERVICE): services_completed;\nconstraint\n  services_completed =\n    sum(s in SERVICE)(bool2int(truck[s] != dtruck));\n    \n% total completed services must meet the threshold - minservice\nconstraint services_completed * 100 >= minservice * card(SERVICE);\n\n% ===== Stage C: Work Types =====\n% record whether a truck has performed any type of service\narray[TRUCK, STYPE] of var bool: truck_stype_done;\nconstraint forall(t in TRUCK where t != dtruck)(\n              forall(st in STYPE)(\n                truck_stype_done[t, st] = exists(s in SERVICE where truck[s] = t)(stype[s] = st)\n              )     \n);\n\n% each truck (except the dummy one) can be arranged services of at most maxsty[ttype[t]] different types\nconstraint if card(STYPE) > 1 then\n    forall(t in TRUCK where t != dtruck)(\n        sum(st in STYPE)(truck_stype_done[t, st]) <= maxsty[ttype[t]]\n    )\nelse\n    true\nendif;\n\n                 \n% ===== Stage D: Maintenance =====\n% D0 - dummy truck do not need maintenance\nconstraint forall(m in MAINT)( mt[dtruck,m] = NO );\nconstraint forall(t in TRUCK, m in MAINT)(\n  mt[t,m] = NO -> ms[t, m] = 0\n);\n\n% D1 - truck not use don't need maintenance\nconstraint forall(t in TRUCK where t != dtruck) (\n                 (truck_worktime[t] = 0) ->\n                 forall(m in MAINT)(mt[t,m] = NO)\n);\n               \n% D2 - make sure all the NO maintenances appear at the end of the list for each truck\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint - 1)(\n                  mt[t, m] = NO -> mt[t, m + 1] = NO    \n);\n\n% D3 - make sure other maintenances appear in order of increasing start time\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint-1)(\n    (mt[t,m] != NO /\\ mt[t,m+1] != NO) -> \n    (ms[t,m] + maintdur[mt[t,m]] <= ms[t,m+1])\n);\n\n% D4 - make sure maintenance and service time don't overlap\nconstraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(\n                 (truck[s] = t /\\ mt[t, m] != NO) -> \n                 (start[s] + service_duration[s] <= ms[t, m] \\/\n                  ms[t, m] + maintdur[mt[t, m]] <= start[s])\n);\n\n% D5 - there must be a SH/LG or MJ maintenance within maxsep[SH] of the start\n% maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]\narray[TRUCK] of var set of MAINT: possible_maint = \n  [ {m | m in MAINT where mt[t, m] != NO /\\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];\nconstraint forall(t in TRUCK where t != dtruck /\\ truck_worktime[t] > 0) (\n                  card(possible_maint[t]) > 0\n);\n\n% D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule\nconstraint forall(t in TRUCK  where t != dtruck /\\ truck_worktime[t] > 0) (\n                  exists(m in MAINT) (\n                         mt[t, m] in {LG, MJ} /\\ ms[t, m] <= maxsep[LG]\n                  )\n);\n\n% D7 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]\narray[TRUCK, MAINT] of var TIME: end_time_maint;  % the end time for each maintenance task:\nconstraint forall(t in TRUCK, m in MAINT)(end_time_maint[t,m] = ms[t,m] + maintdur[mt[t,m]]);\n\n% the set of possible next maintenances m2 for each truck t and each maintenance task m1\narray[TRUCK, MAINT] of var set of MAINT: next_maint = \n  array2d(TRUCK, MAINT,\n    [ { m2 | m2 in MAINT \n        where \n             m2 > m1 /\\ mt[t,m2] != NO /\\ ms[t,m2] \n             <= end_time_maint[t,m1] + maxsep[SH] \n      }\n      | t in TRUCK, m1 in MAINT\n    ]\n  );\n\n% either the task ends late enough (> endtime),\n% or there exists at least one suitable follow-up task m2 in the next_maint set\nconstraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t,m1] != NO)(\n                  end_time_maint[t,m1] + maxsep[SH] >= endtime \\/\n                  card(next_maint[t, m1]) > 0\n);\n\n  \n% D8 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]\narray[TRUCK, MAINT] of var TIME: end_time_maint2;  % the end time for each maintenance task(LG or MJ):\nconstraint forall(t in TRUCK, m in MAINT where mt[t, m] in {LG, MJ})(end_time_maint2[t,m] = ms[t,m] + maintdur[mt[t,m]]);\n\n% the set of possible next maintenances m2 for each truck t and each maintenance task m1\narray[TRUCK, MAINT] of var set of MAINT: next_maint2 = \n  array2d(TRUCK, MAINT,\n    [ { m2 | m2 in MAINT \n        where \n             mt[t, m1] in {LG, MJ} /\\ mt[t, m2] in {LG, MJ} /\\\n             m2 > m1 /\\ mt[t,m2] != NO /\\ ms[t,m2] \n             <= end_time_maint2[t,m1] + maxsep[LG] \n      }\n      | t in TRUCK, m1 in MAINT \n    ]\n  );\n\n% either the task ends late enough (> endtime),\n% or there exists at least one suitable follow-up task m2 in the next_maint2 set\nconstraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(\n                  end_time_maint2[t,m1] + maxsep[LG] >= endtime \\/\n                  card(next_maint2[t, m1]) > 0\n);\n\n\n% ===== Stage E: Objective =====\n% store the number of maintenance tasks for each time t\narray[0..endtime - 1] of var 0..card(TRUCK) * maxmaint: num_maint;\nconstraint\n  forall(t in 0..endtime - 1) (\n    num_maint[t] =\n      sum(tk in TRUCK, m in MAINT where mt[tk, m] != NO)(\n        bool2int(mt[tk, m] != NO /\\ ms[tk, m] <= t /\\ t < ms[tk, m] + maintdur[mt[tk, m]])\n      )\n  );\n\nint: max_total_service = sum(service_duration);\n\n% total duration of services\nvar 0..max_total_service: totalService = \n    sum(s in SERVICE)(bool2int(truck[s] != dtruck) * service_duration[s]);\n\n% total maintenance load\nvar 0..card(TRUCK)*maxmaint*card(TRUCK)*maxmaint*endtime: totalLoad = \n    sum(t in 0..endtime-1)(num_maint[t] * num_maint[t]);\n\n% assume a weight\nint: service_time_max = card(SERVICE) * endtime;\nint: weight = service_time_max + 1;\n\nsolve minimize weight * totalLoad - totalService;\n\n\n% ==== Stage F: Major Maintenance =====\nconstraint forall(t in TRUCK where t != dtruck)(\n    let {\n        % whether the current truck has MJ\n        var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);\n        % the start time of the first MJ service\n        var TIME: first_mj_start = \n            if has_mj \n            then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) \n            else endtime endif;\n        % the end time of the last MJ service\n        var TIME: last_mj_end = \n            if has_mj \n            then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) \n            else 0 endif\n    } in\n    (\n       if has_mj \n       then\n          % total service time before the first MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) \n              + prework[t] <= majorwork\n       else\n          sum(s in SERVICE where truck[s] = t)(service_duration[s]) \n              + prework[t] <= majorwork\n       endif\n    )\n    /\\\n    (\n      if has_mj \n      then\n          % total service time after the last MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork\n      else\n          true\n      endif\n    )\n    /\\\n      forall(m1 in MAINT where mt[t,m1] = MJ)(\n          let {\n              % whether the truck has another MJ\n              var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),\n              % anthoer MJ's start time\n              var TIME: next_mj_start = \n                  if has_next_mj \n                  then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) \n                  else endtime endif\n          } in\n          % total service time between any two MJs\n          sum(s in SERVICE where truck[s] = t /\\ \n              ms[t,m1] + maintdur[MJ] <= start[s] /\\ \n              start[s] < next_mj_start)\n              (service_duration[s]) <= majorwork\n    )\n);\n\n\n% constraint totalLoad = 16;\n% constraint totalService = 25;\n\n% output [\n%     \"mt: \", show(mt), \"\\n\",\n%     \"ms: \", show(ms), \"\\n\",\n%     \"truck: \", show(truck), \"\\n\",\n%     \"num_maint: \", show(num_maint), \"\\n\",\n%     \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)\n% ];\n"
+            }
+        },
+        "parent": "180bfbc5-cb5d-f157-ad53-8bee89df9c7a",
+        "uuid": "866bb66a-3cb4-4bbc-b28b-f5d9c820f7c5"
+    },
+    "modelAssignments": [
+        {
+            "id": "LXZK9u54uu",
+            "model": "models/service.mzn",
+            "name": "Service Model 1"
+        }
+    ],
+    "moocName": "FIT5216 S1 2025",
+    "moocPasswordString": "Submission token",
+    "name": "Assignment 3 Service Scheduling",
+    "sendMeta": true,
+    "solutionAssignments": [
+        {
+            "data": "data/service1.dzn",
+            "id": "lOAbpfLS7S",
+            "model": "models/service.mzn",
+            "name": "Service 1",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service2.dzn",
+            "id": "2IdRGQNcqL",
+            "model": "models/service.mzn",
+            "name": "Service 2",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service3.dzn",
+            "id": "qp9VMXaErW",
+            "model": "models/service.mzn",
+            "name": "Service 3",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service4.dzn",
+            "id": "0BmKNUukHc",
+            "model": "models/service.mzn",
+            "name": "Service 4",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service5.dzn",
+            "id": "xlOHQsKaRm",
+            "model": "models/service.mzn",
+            "name": "Service 5",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service6.dzn",
+            "id": "nX1TcZPk7I",
+            "model": "models/service.mzn",
+            "name": "Service 6",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service7.dzn",
+            "id": "Qg9QtjK6k6",
+            "model": "models/service.mzn",
+            "name": "Service 7",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service8.dzn",
+            "id": "IiPWMjxenB",
+            "model": "models/service.mzn",
+            "name": "Service 8",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service9.dzn",
+            "id": "9m3ZBoIjtq",
+            "model": "models/service.mzn",
+            "name": "Service 9",
+            "timeout": "60"
+        },
+        {
+            "data": "data/service10.dzn",
+            "id": "E5BOJWaAjZ",
+            "model": "models/service.mzn",
+            "name": "Service 10",
+            "timeout": "60"
+        }
+    ],
+    "submissionTerms": "By submitting this work you guarantee that no generative AI was used to complete the project, and that the submission is all your own work, without collaboration or collusion with others.",
+    "submissionURL": "https://autograder.optimisation-2020.cloud.edu.au/api/index.php"
+}
