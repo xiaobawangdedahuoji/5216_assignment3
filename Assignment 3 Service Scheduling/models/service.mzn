@@ -122,12 +122,12 @@ constraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(
 % maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]
 array[TRUCK] of var set of MAINT: possible_maint = 
   [ {m | m in MAINT where mt[t, m] != NO /\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];
-constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
+constraint maxsep[SH] < endtime -> forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
                   card(possible_maint[t]) > 0
 );
 
 % D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule
-constraint forall(t in TRUCK  where t != dtruck /\ truck_worktime[t] > 0) (
+constraint maxsep[LG] < endtime -> forall(t in TRUCK  where t != dtruck /\ truck_worktime[t] > 0) (
                   exists(m in MAINT) (
                          mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG]
                   )
@@ -135,7 +135,7 @@ constraint forall(t in TRUCK  where t != dtruck /\ truck_worktime[t] > 0) (
 
 % D7 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]
 constraint
-  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(
+  maxsep[SH] < endtime -> forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(
         let {
             % the end time of maintenance m1
             var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]
@@ -154,7 +154,7 @@ constraint
   
 % D8 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]
 constraint
-  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] != NO)(
+  maxsep[LG] < endtime -> forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] != NO)(
         let {
             % the end time of maintenance m1
             var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]
