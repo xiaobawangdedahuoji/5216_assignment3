@@ -108,7 +108,7 @@ constraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint - 1)(
 % D3 - make sure other maintenances appear in order of increasing start time
 constraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint-1)(
     (mt[t,m] != NO /\ mt[t,m+1] != NO) -> 
-    (ms[t,m] + maintdur[mt[t,m]] <= ms[t,m+1])
+    (ms[t,m] + maintdur[mt[t,m]] <= ms[t, m+1] /\ ms[t,m] <= ms[t, m+1])
 );
 
 % D4 - make sure maintenance and service time don't overlap
@@ -126,18 +126,7 @@ constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
                   card(possible_maint[t]) > 0
 );
 
-% constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
-%                   exists(m in MAINT) (
-%                          mt[t,m] != NO /\ ms[t,m] <= maxsep[SH]
-%                   )  
-% );
-
 % D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule
-% array[TRUCK] of var set of MAINT: possible_maint_LG = 
-%   [ {m | m in MAINT where mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG]} | t in TRUCK ];
-% constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
-%                   card(possible_maint_LG[t]) > 0
-% );
 constraint forall(t in TRUCK  where t != dtruck /\ truck_worktime[t] > 0) (
                   exists(m in MAINT) (
                          mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG]
@@ -224,13 +213,13 @@ solve minimize weight * totalLoad - totalService;
 
 % constraint totalLoad = 16;
 % constraint totalService = 25;
-output [
-    "mt: ", show(mt), "\n",
-    "ms: ", show(ms), "\n",
-    "truck: ", show(truck), "\n",
-    "num_maint: ", show(num_maint), "\n",
-    "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
-];
+% output [
+%     "mt: ", show(mt), "\n",
+%     "ms: ", show(ms), "\n",
+%     "truck: ", show(truck), "\n",
+%     "num_maint: ", show(num_maint), "\n",
+%     "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
+% ];
 
 % ==== Stage F: Major Maintenance =====
 constraint forall(t in TRUCK where t != dtruck)(
@@ -288,3 +277,14 @@ constraint forall(t in TRUCK where t != dtruck)(
     )
 );
 
+
+% %%%%% symmetry breaking for same services: same start/end => enforce truck order %%%%%
+% %%%%% focus on dataset like service8 %%%%%
+constraint forall(i, j in SERVICE where i < j /\ start[i] = start[j] /\ end[i] = end[j])(
+      truck[i] <= truck[j]
+);
+
+% %%%%% extra constraint about Variable Bounds %%%%%
+constraint forall(t in TRUCK, m in MAINT)(
+      ms[t, m] + maintdur[mt[t, m]] <= endtime
+);

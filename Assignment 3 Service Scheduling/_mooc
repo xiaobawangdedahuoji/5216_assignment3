@@ -4,12 +4,2807 @@
         "files": {
             "models/service.mzn": {
                 "changes": [
+                    {
+                        "edits": [
+                            {
+                                "line": 225,
+                                "text": "constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 226,
+                                "text": "constraint if majorwork < sum(service_duration) then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 226,
+                                "text": "  % (original MJ constraints begin)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 226,
+                                "text": "  forall(t in TRUCK where t != dtruck)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 227,
+                                "text": "        % whether the current truck has MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 228,
+                                "text": "        var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 229,
+                                "text": "        % the start time of the first MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 230,
+                                "text": "        var TIME: first_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 231,
+                                "text": "            if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 232,
+                                "text": "            then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 233,
+                                "text": "            else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 234,
+                                "text": "        % the end time of the last MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 235,
+                                "text": "        var TIME: last_mj_end = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 236,
+                                "text": "            if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 237,
+                                "text": "            then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 238,
+                                "text": "            else 0 endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "      var bool: has_mj = exists(m in MAINT)(mt[t,m]=MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "      var TIME: first_mj_start = if has_mj then min([ms[t,m] | m in MAINT where mt[t,m]=MJ]) else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "      var TIME: last_mj_end   = if has_mj then max([ms[t,m]+maintdur[MJ] | m in MAINT where mt[t,m]=MJ]) else 0 endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 241,
+                                "text": "       if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 242,
+                                "text": "       then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 243,
+                                "text": "          % total service time before the first MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 244,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 245,
+                                "text": "              + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 246,
+                                "text": "       else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 247,
+                                "text": "          sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 249,
+                                "text": "       endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      (if has_mj then sum(s in SERVICE where truck[s]=t /\\ start[s]<first_mj_start)(service_duration[s]) + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "       else sum(s in SERVICE where truck[s]=t)(service_duration[s]) + prework[t] <= majorwork endif)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      (if has_mj then sum(s in SERVICE where truck[s]=t /\\ start[s]>=last_mj_end)(service_duration[s]) <= majorwork else true endif)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      forall(m1 in MAINT where mt[t,m1]=MJ)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "        let { var bool: has_next = exists(m2 in m1+1..maxmaint)(mt[t,m2]=MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "              var TIME: next_start = if has_next then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2]=MJ]) else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "        } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "        sum(s in SERVICE where truck[s]=t /\\ ms[t,m1]+maintdur[MJ]<=start[s] /\\ start[s]<next_start)(service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "      )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 251,
+                                "text": "    /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 252,
+                                "text": "    (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 253,
+                                "text": "      if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 254,
+                                "text": "      then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 255,
+                                "text": "          % total service time after the last MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 256,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 257,
+                                "text": "      else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 258,
+                                "text": "          true",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 259,
+                                "text": "      endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 260,
+                                "text": "    )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 261,
+                                "text": "    /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 262,
+                                "text": "      forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 263,
+                                "text": "          let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 264,
+                                "text": "              % whether the truck has another MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 265,
+                                "text": "              var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 266,
+                                "text": "              % anthoer MJ's start time",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 267,
+                                "text": "              var TIME: next_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 268,
+                                "text": "                  if has_next_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 269,
+                                "text": "                  then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 270,
+                                "text": "                  else endtime endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 271,
+                                "text": "          } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 272,
+                                "text": "          % total service time between any two MJs",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 273,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 274,
+                                "text": "              ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 275,
+                                "text": "              start[s] < next_mj_start)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 276,
+                                "text": "              (service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 277,
+                                "text": "    )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 278,
+                                "text": ");",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "  )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "  % (original MJ constraints end)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "  true",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "% constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         % whether the current truck has MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         % the start time of the first MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         var TIME: first_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         % the end time of the last MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%         var TIME: last_mj_end = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%             else 0 endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%        if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%        then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           % total service time before the first MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%        else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%        endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%       if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%       then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           % total service time after the last MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%       else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           true",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%       endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%       forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               % whether the truck has another MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               % anthoer MJ's start time",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               var TIME: next_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%                   if has_next_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%                   then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%                   else endtime endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           % total service time between any two MJs",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               start[s] < next_mj_start)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%               (service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "% );",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748569456.989
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 225,
+                                "text": "constraint if majorwork < sum(service_duration) then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 226,
+                                "text": "  % (original MJ constraints begin)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 227,
+                                "text": "  forall(t in TRUCK where t != dtruck)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 228,
+                                "text": "    let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 229,
+                                "text": "      var bool: has_mj = exists(m in MAINT)(mt[t,m]=MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 230,
+                                "text": "      var TIME: first_mj_start = if has_mj then min([ms[t,m] | m in MAINT where mt[t,m]=MJ]) else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 231,
+                                "text": "      var TIME: last_mj_end   = if has_mj then max([ms[t,m]+maintdur[MJ] | m in MAINT where mt[t,m]=MJ]) else 0 endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 232,
+                                "text": "    } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 233,
+                                "text": "    (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 234,
+                                "text": "      (if has_mj then sum(s in SERVICE where truck[s]=t /\\ start[s]<first_mj_start)(service_duration[s]) + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 235,
+                                "text": "       else sum(s in SERVICE where truck[s]=t)(service_duration[s]) + prework[t] <= majorwork endif)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 236,
+                                "text": "      /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 237,
+                                "text": "      (if has_mj then sum(s in SERVICE where truck[s]=t /\\ start[s]>=last_mj_end)(service_duration[s]) <= majorwork else true endif)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 238,
+                                "text": "      /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "      forall(m1 in MAINT where mt[t,m1]=MJ)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 240,
+                                "text": "        let { var bool: has_next = exists(m2 in m1+1..maxmaint)(mt[t,m2]=MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 241,
+                                "text": "              var TIME: next_start = if has_next then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2]=MJ]) else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 242,
+                                "text": "        } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 243,
+                                "text": "        sum(s in SERVICE where truck[s]=t /\\ ms[t,m1]+maintdur[MJ]<=start[s] /\\ start[s]<next_start)(service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 244,
+                                "text": "      )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 245,
+                                "text": "    )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 246,
+                                "text": "  )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 247,
+                                "text": "  % (original MJ constraints end)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "constraint ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "    % if majorwork is large enough to cover all services, skip",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "    if majorwork < sum(service_duration) then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "        forall(t in TRUCK where t != dtruck)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              % whether the current truck has MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              % the start time of the first MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              var TIME: first_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              % the end time of the last MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "              var TIME: last_mj_end = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  else 0 endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "             if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "             then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                % total service time before the first MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "             else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "             endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "            if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "            then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                % total service time after the last MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "            else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                true",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "            endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "            forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    % whether the truck has another MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    % anthoer MJ's start time",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    var TIME: next_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                        if has_next_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                        then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                        else endtime endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                % total service time between any two MJs",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    start[s] < next_mj_start)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                    (service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "          )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "        )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 251,
+                                "text": "",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 252,
+                                "text": "% constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 253,
+                                "text": "%     let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 254,
+                                "text": "%         % whether the current truck has MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 255,
+                                "text": "%         var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 256,
+                                "text": "%         % the start time of the first MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 257,
+                                "text": "%         var TIME: first_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 258,
+                                "text": "%             if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 259,
+                                "text": "%             then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 260,
+                                "text": "%             else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 261,
+                                "text": "%         % the end time of the last MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 262,
+                                "text": "%         var TIME: last_mj_end = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 263,
+                                "text": "%             if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 264,
+                                "text": "%             then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 265,
+                                "text": "%             else 0 endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 266,
+                                "text": "%     } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 267,
+                                "text": "%     (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 268,
+                                "text": "%        if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 269,
+                                "text": "%        then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 270,
+                                "text": "%           % total service time before the first MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 271,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 272,
+                                "text": "%               + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 273,
+                                "text": "%        else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 274,
+                                "text": "%           sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 275,
+                                "text": "%               + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 276,
+                                "text": "%        endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 277,
+                                "text": "%     )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 278,
+                                "text": "%     /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "%     (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 280,
+                                "text": "%       if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 281,
+                                "text": "%       then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "%           % total service time after the last MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 283,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 284,
+                                "text": "%       else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 285,
+                                "text": "%           true",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "%       endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 287,
+                                "text": "%     )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 288,
+                                "text": "%     /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 289,
+                                "text": "%       forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 290,
+                                "text": "%           let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 291,
+                                "text": "%               % whether the truck has another MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "%               var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "%               % anthoer MJ's start time",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 294,
+                                "text": "%               var TIME: next_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 295,
+                                "text": "%                   if has_next_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 296,
+                                "text": "%                   then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 297,
+                                "text": "%                   else endtime endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 298,
+                                "text": "%           } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 299,
+                                "text": "%           % total service time between any two MJs",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 300,
+                                "text": "%           sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 301,
+                                "text": "%               ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 302,
+                                "text": "%               start[s] < next_mj_start)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 303,
+                                "text": "%               (service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 304,
+                                "text": "%     )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 305,
+                                "text": "% );",
+                                "type": "deletion"
+                            }
+                        ],
+                        "timestamp": 1748569598.988
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 230,
+                                "text": "          let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 231,
+                                "text": "              % whether the current truck has MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 232,
+                                "text": "              var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 233,
+                                "text": "              % the start time of the first MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 234,
+                                "text": "              var TIME: first_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 235,
+                                "text": "                  if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 236,
+                                "text": "                  then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 237,
+                                "text": "                  else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 238,
+                                "text": "              % the end time of the last MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "              var TIME: last_mj_end = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 240,
+                                "text": "                  if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 241,
+                                "text": "                  then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 242,
+                                "text": "                  else 0 endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 243,
+                                "text": "          } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 244,
+                                "text": "          (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 245,
+                                "text": "             if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 246,
+                                "text": "             then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 247,
+                                "text": "                % total service time before the first MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 249,
+                                "text": "                    + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "             else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 251,
+                                "text": "                sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 252,
+                                "text": "                    + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 253,
+                                "text": "             endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 254,
+                                "text": "          )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 255,
+                                "text": "          /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 256,
+                                "text": "          (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 257,
+                                "text": "            if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 258,
+                                "text": "            then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 259,
+                                "text": "                % total service time after the last MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 260,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 261,
+                                "text": "            else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 262,
+                                "text": "                true",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 263,
+                                "text": "            endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 264,
+                                "text": "          )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 265,
+                                "text": "          /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 266,
+                                "text": "            forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 267,
+                                "text": "                let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 268,
+                                "text": "                    % whether the truck has another MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 269,
+                                "text": "                    var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 270,
+                                "text": "                    % anthoer MJ's start time",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 271,
+                                "text": "                    var TIME: next_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 272,
+                                "text": "                        if has_next_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 273,
+                                "text": "                        then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 274,
+                                "text": "                        else endtime endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 275,
+                                "text": "                } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 276,
+                                "text": "                % total service time between any two MJs",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 277,
+                                "text": "                sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 278,
+                                "text": "                    ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "                    start[s] < next_mj_start)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 280,
+                                "text": "                    (service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 281,
+                                "text": "          )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                % whether the current truck has MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                % the start time of the first MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                var TIME: first_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                % the end time of the last MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                var TIME: last_mj_end = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                    else 0 endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "               if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "               then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  % total service time before the first MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "               else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "               endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "              if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "              then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  % total service time after the last MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "              else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  true",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "              endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "              forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      % whether the truck has another MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      % anthoer MJ's start time",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      var TIME: next_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                          if has_next_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                          then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                          else endtime endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  % total service time between any two MJs",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      start[s] < next_mj_start)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "                      (service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "            )",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748569606.53
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 225,
+                                "text": "",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 226,
+                                "text": "constraint ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 227,
+                                "text": "    % if majorwork is large enough to cover all services, skip",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 228,
+                                "text": "    if majorwork < sum(service_duration) then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 229,
+                                "text": "        forall(t in TRUCK where t != dtruck)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 230,
+                                "text": "            let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 231,
+                                "text": "                % whether the current truck has MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 232,
+                                "text": "                var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 233,
+                                "text": "                % the start time of the first MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 234,
+                                "text": "                var TIME: first_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 235,
+                                "text": "                    if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 236,
+                                "text": "                    then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 237,
+                                "text": "                    else endtime endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 238,
+                                "text": "                % the end time of the last MJ service",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 239,
+                                "text": "                var TIME: last_mj_end = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 240,
+                                "text": "                    if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 241,
+                                "text": "                    then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 242,
+                                "text": "                    else 0 endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 243,
+                                "text": "            } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 244,
+                                "text": "            (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 245,
+                                "text": "               if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 246,
+                                "text": "               then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 247,
+                                "text": "                  % total service time before the first MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 248,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 249,
+                                "text": "                      + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 250,
+                                "text": "               else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 251,
+                                "text": "                  sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 252,
+                                "text": "                      + prework[t] <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 253,
+                                "text": "               endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 254,
+                                "text": "            )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 255,
+                                "text": "            /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 256,
+                                "text": "            (",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 257,
+                                "text": "              if has_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 258,
+                                "text": "              then",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 259,
+                                "text": "                  % total service time after the last MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 260,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 261,
+                                "text": "              else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 262,
+                                "text": "                  true",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 263,
+                                "text": "              endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 264,
+                                "text": "            )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 265,
+                                "text": "            /\\",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 266,
+                                "text": "              forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 267,
+                                "text": "                  let {",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 268,
+                                "text": "                      % whether the truck has another MJ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 269,
+                                "text": "                      var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 270,
+                                "text": "                      % anthoer MJ's start time",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 271,
+                                "text": "                      var TIME: next_mj_start = ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 272,
+                                "text": "                          if has_next_mj ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 273,
+                                "text": "                          then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 274,
+                                "text": "                          else endtime endif",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 275,
+                                "text": "                  } in",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 276,
+                                "text": "                  % total service time between any two MJs",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 277,
+                                "text": "                  sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 278,
+                                "text": "                      ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 279,
+                                "text": "                      start[s] < next_mj_start)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 280,
+                                "text": "                      (service_duration[s]) <= majorwork",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 281,
+                                "text": "            )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 282,
+                                "text": "        )",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 283,
+                                "text": "else",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 284,
+                                "text": "  true",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 285,
+                                "text": "endif;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        % whether the current truck has MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        % the start time of the first MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        var TIME: first_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            else endtime endif;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        % the end time of the last MJ service",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "        var TIME: last_mj_end = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "            else 0 endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "       if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "       then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          % total service time before the first MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "       else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          sum(s in SERVICE where truck[s] = t)(service_duration[s]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              + prework[t] <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "       endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    (",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "      if has_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "      then",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          % total service time after the last MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "      else",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          true",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "      endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    /\\",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "      forall(m1 in MAINT where mt[t,m1] = MJ)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          let {",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              % whether the truck has another MJ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              % anthoer MJ's start time",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              var TIME: next_mj_start = ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "                  if has_next_mj ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "                  then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "                  else endtime endif",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          } in",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          % total service time between any two MJs",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "          sum(s in SERVICE where truck[s] = t /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              ms[t,m1] + maintdur[MJ] <= start[s] /\\ ",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              start[s] < next_mj_start)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "              (service_duration[s]) <= majorwork",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": "    )",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 286,
+                                "text": ");",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748569652.646
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 292,
+                                "text": "% %%%%% extra constraints for pruning %%%%%",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% array[TRUCK] of var 0..maxmaint: num_maint_tasks;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 294,
+                                "text": "% constraint forall(t in TRUCK)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 295,
+                                "text": "%     num_maint_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] != NO))",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 296,
+                                "text": "% );",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 297,
+                                "text": "% constraint sum(t in TRUCK where t != dtruck)(num_maint_tasks[t]) <= card(TRUCK) * maxmaint;",
+                                "type": "deletion"
+                            }
+                        ],
+                        "timestamp": 1748569815.756
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 216,
+                                "text": "% output [",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 217,
+                                "text": "%     \"mt: \", show(mt), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 218,
+                                "text": "%     \"ms: \", show(ms), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 219,
+                                "text": "%     \"truck: \", show(truck), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 220,
+                                "text": "%     \"num_maint: \", show(num_maint), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 221,
+                                "text": "%     \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 222,
+                                "text": "% ];",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "output [",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "    \"mt: \", show(mt), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "    \"ms: \", show(ms), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "    \"truck: \", show(truck), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "    \"num_maint: \", show(num_maint), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "    \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "];",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748569831.861
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 292,
+                                "text": "% ===== SPECIAL#3: MJ lower bound per truck =====",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "array[TRUCK] of var int: lower_mj = [ if t != dtruck then (truck_worktime[t] + prework[t] + majorwork - 1) div majorwork else 0 endif | t in TRUCK ];",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "array[TRUCK] of var 0..maxmaint: mj_tasks;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "constraint forall(t in TRUCK)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "    mj_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] = MJ))",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": ");",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "    mj_tasks[t] >= lower_mj[t]",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": ");",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748570032.658
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 292,
+                                "text": "% ===== SPECIAL#3: MJ lower bound per truck =====",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "array[TRUCK] of var int: lower_mj = [ if t != dtruck then (truck_worktime[t] + prework[t] + majorwork - 1) div majorwork else 0 endif | t in TRUCK ];",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 294,
+                                "text": "array[TRUCK] of var 0..maxmaint: mj_tasks;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 295,
+                                "text": "constraint forall(t in TRUCK)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 296,
+                                "text": "    mj_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] = MJ))",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 297,
+                                "text": ");",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 298,
+                                "text": "constraint forall(t in TRUCK where t != dtruck)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 299,
+                                "text": "    mj_tasks[t] >= lower_mj[t]",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 300,
+                                "text": ");",
+                                "type": "deletion"
+                            }
+                        ],
+                        "timestamp": 1748570253.99
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 216,
+                                "text": "output [",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 217,
+                                "text": "    \"mt: \", show(mt), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 218,
+                                "text": "    \"ms: \", show(ms), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 219,
+                                "text": "    \"truck: \", show(truck), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 220,
+                                "text": "    \"num_maint: \", show(num_maint), \"\\n\",",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 221,
+                                "text": "    \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 222,
+                                "text": "];",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "% output [",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "%     \"mt: \", show(mt), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "%     \"ms: \", show(ms), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "%     \"truck: \", show(truck), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "%     \"num_maint: \", show(num_maint), \"\\n\",",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "%     \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 223,
+                                "text": "% ];",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% %%%%% extra constraints for pruning %%%%%",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% array[TRUCK] of var 0..maxmaint: num_maint_tasks;",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% constraint forall(t in TRUCK)(",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "%     num_maint_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] != NO))",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% );",
+                                "type": "insertion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% constraint sum(t in TRUCK where t != dtruck)(num_maint_tasks[t]) <= card(TRUCK) * maxmaint;",
+                                "type": "insertion"
+                            }
+                        ],
+                        "timestamp": 1748570348.411
+                    },
+                    {
+                        "edits": [
+                            {
+                                "line": 291,
+                                "text": "",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 292,
+                                "text": "% %%%%% extra constraints for pruning %%%%%",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 293,
+                                "text": "% array[TRUCK] of var 0..maxmaint: num_maint_tasks;",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 294,
+                                "text": "% constraint forall(t in TRUCK)(",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 295,
+                                "text": "%     num_maint_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] != NO))",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 296,
+                                "text": "% );",
+                                "type": "deletion"
+                            },
+                            {
+                                "line": 297,
+                                "text": "% constraint sum(t in TRUCK where t != dtruck)(num_maint_tasks[t]) <= card(TRUCK) * maxmaint;",
+                                "type": "deletion"
+                            }
+                        ],
+                        "timestamp": 1748570363.758
+                    }
                 ],
-                "snapshot": "%%%% Service and Maintenance scheduling\nint: endtime;                   % latest time to be scheduled\nset of int: TIME = 0..endtime;\nenum SERVICE;                   % services to be scheduled\narray[SERVICE] of TIME: start;  % start time of service\narray[SERVICE] of TIME: end;    % end time of service\nenum STYPE;\narray[SERVICE] of STYPE: stype; % type of each service\n\nenum TRUCK;                      % truck \nTRUCK: dtruck;                   % dummy truck\nenum TTYPE = { SML, MED, LRG, DUMMY };  % truck type\narray[TRUCK] of TTYPE: ttype;    % type of each truck\narray[TRUCK] of int: prework;    % units of work since last major maintenance\nconstraint assert(forall(t in TRUCK)(ttype[t] = DUMMY <-> t = dtruck),\"dummy type only for dtruck\\n\");\narray[TTYPE] of int: maxsty;     % max service types for each truck type\n\nenum MAINTYPE = { NO, SH, LG, MJ }; % NO means no maintenance\narray[MAINTYPE] of int: maintdur; % duration of maintenance\narray[MAINTYPE] of int: maxsep;   % max elapsed time since last maint of this type or higher\nconstraint assert(maintdur[NO] = 0 /\\ maxsep[NO] = 0, \"rules for empty maintenance\\n\");\n\nint: minwork;                   % minimal percentage of time each truck that works is working\nint: minservice;                % minimal percentage of services performed\n\nint: majorwork;                 % amount of work allowed before major maintenance required\n\n\narray[SERVICE] of var TRUCK: truck; % which truck takes each service: dtruck if none\n\nint: maxmaint;\nset of int: MAINT = 1..maxmaint;\narray[TRUCK,MAINT] of var MAINTYPE: mt; % maintenance for each truck NO means not used.\narray[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck\n\ninclude \"globals.mzn\";\n\n\n% ===== Stage A: Assigning Services =====\n% the same truck cannot overlap in time (except dummy truck DD)\narray[SERVICE] of int: service_duration = [end[s] - start[s] | s in SERVICE];\nconstraint forall(t in TRUCK where t != dtruck)(\n    cumulative(\n        [start[s] | s in SERVICE] ++ [ms[t,m] | m in MAINT],\n        [service_duration[s] | s in SERVICE] ++ [maintdur[mt[t,m]] | m in MAINT],\n        [bool2int(truck[s] = t) | s in SERVICE] ++ [bool2int(mt[t,m] != NO) | m in MAINT],\n        1\n    )\n);\n\n% ===== Stage B: Truck Usage, Service Guarantee =====\n% total work time of each truck\narray[TRUCK] of var 0..sum(service_duration): truck_worktime;\nconstraint forall(t in TRUCK)(\n    truck_worktime[t] = sum(s in SERVICE)(\n        bool2int(truck[s] = t) * service_duration[s]\n    )\n);\n           \n% the work time of each truck must meet the threshold - minwork\nconstraint forall(t in TRUCK where t != dtruck)(\n                 (truck_worktime[t] > 0) -> (truck_worktime[t] * 100 >= minwork * endtime)\n);\n\n% the num of completed services\nvar 0..card(SERVICE): services_completed;\nconstraint\n  services_completed =\n    sum(s in SERVICE)(bool2int(truck[s] != dtruck));\n    \n% total completed services must meet the threshold - minservice\nconstraint services_completed * 100 >= minservice * card(SERVICE);\n\n% ===== Stage C: Work Types =====\n% record whether a truck has performed any type of service\narray[TRUCK, STYPE] of var bool: truck_stype_done;\nconstraint forall(t in TRUCK where t != dtruck)(\n              forall(st in STYPE)(\n                truck_stype_done[t, st] = exists(s in SERVICE where truck[s] = t)(stype[s] = st)\n              )     \n);\n\n% each truck (except the dummy one) can be arranged services of at most maxsty[ttype[t]] different types\nconstraint if card(STYPE) > 1 then\n    forall(t in TRUCK where t != dtruck)(\n        sum(st in STYPE)(truck_stype_done[t, st]) <= maxsty[ttype[t]]\n    )\nelse\n    true\nendif;\n\n                 \n% ===== Stage D: Maintenance =====\n% D0 - dummy truck do not need maintenance\nconstraint forall(m in MAINT)( mt[dtruck,m] = NO );\n\n% D1 - truck not use don't need maintenance\nconstraint forall(t in TRUCK where t != dtruck) (\n                 (truck_worktime[t] = 0) ->\n                 forall(m in MAINT)(mt[t,m] = NO)\n);\n               \n% D2 - make sure all the NO maintenances appear at the end of the list for each truck\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint - 1)(\n                  mt[t, m] = NO -> mt[t, m + 1] = NO    \n);\n\n% D3 - make sure other maintenances appear in order of increasing start time\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint-1)(\n    (mt[t,m] != NO /\\ mt[t,m+1] != NO) -> \n    (ms[t,m] + maintdur[mt[t,m]] <= ms[t,m+1])\n);\n\n% D4 - make sure maintenance and service time don't overlap\nconstraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(\n                 (truck[s] = t /\\ mt[t, m] != NO) -> \n                 (start[s] + service_duration[s] <= ms[t, m] \\/\n                  ms[t, m] + maintdur[mt[t, m]] <= start[s])\n);\n\n% D5 - there must be a SH/LG or MJ maintenance within maxsep[SH] of the start\n% maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]\narray[TRUCK] of var set of MAINT: possible_maint = \n  [ {m | m in MAINT where mt[t, m] != NO /\\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];\nconstraint forall(t in TRUCK where t != dtruck /\\ truck_worktime[t] > 0) (\n                  card(possible_maint[t]) > 0\n);\n\n% constraint forall(t in TRUCK where t != dtruck /\\ truck_worktime[t] > 0) (\n%                   exists(m in MAINT) (\n%                          mt[t,m] != NO /\\ ms[t,m] <= maxsep[SH]\n%                   )  \n% );\n\n% D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule\n% array[TRUCK] of var set of MAINT: possible_maint_LG = \n%   [ {m | m in MAINT where mt[t, m] in {LG, MJ} /\\ ms[t, m] <= maxsep[LG]} | t in TRUCK ];\n% constraint forall(t in TRUCK where t != dtruck /\\ truck_worktime[t] > 0) (\n%                   card(possible_maint_LG[t]) > 0\n% );\nconstraint forall(t in TRUCK  where t != dtruck /\\ truck_worktime[t] > 0) (\n                  exists(m in MAINT) (\n                         mt[t, m] in {LG, MJ} /\\ ms[t, m] <= maxsep[LG]\n                  )\n);\n\n% D7 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]\nconstraint\n  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(\n        let {\n            % the end time of maintenance m1\n            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]\n        } in\n          % if end_time_m1 + maxsep[LG] is less than endtime, \n          % there must be another maintenance task m2：\n          if end_time_m1 + maxsep[LG] < endtime then\n            exists(m2 in MAINT where m2 > m1)(\n              % the start time of m2 is within maxsep[SH] after m1\n              mt[t, m2] in {LG, MJ} /\\ ms[t, m2] <= end_time_m1 + maxsep[LG]\n            )\n          else\n            true\n          endif\n  );\n  \n% D8 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]\nconstraint\n  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] != NO)(\n        let {\n            % the end time of maintenance m1\n            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]\n        } in\n          % if end_time_m1 + maxsep[SH] is less than endtime, \n          % there must be another maintenance task m2：\n          if end_time_m1 + maxsep[SH] < endtime then\n            exists(m2 in MAINT where m2 > m1)(\n              % the start time of m2 is within maxsep[SH] after m1\n              mt[t, m2] != NO /\\ ms[t, m2] <= end_time_m1 + maxsep[SH]\n            )\n          else\n            true\n          endif\n  );\n\n  \n% ===== Stage E: Objective =====\n% store the number of maintenance tasks for each time t\narray[0..endtime - 1] of var 0..card(TRUCK) * maxmaint: num_maint;\nconstraint\n  forall(t in 0..endtime - 1) (\n    num_maint[t] =\n      sum(tk in TRUCK, m in MAINT where mt[tk, m] != NO)(\n        bool2int(mt[tk, m] != NO /\\ ms[tk, m] <= t /\\ t < ms[tk, m] + maintdur[mt[tk, m]])\n      )\n  );\n\nint: max_total_service = sum(service_duration);\n\n% total duration of services\nvar 0..max_total_service: totalService = \n    sum(s in SERVICE)(bool2int(truck[s] != dtruck) * service_duration[s]);\n\n% total maintenance load\nvar 0..card(TRUCK)*maxmaint*card(TRUCK)*maxmaint*endtime: totalLoad = \n    sum(t in 0..endtime-1)(num_maint[t] * num_maint[t]);\n\n% assume a weight\nint: service_time_max = card(SERVICE) * endtime;\nint: weight = service_time_max + 1;\n\nsolve minimize weight * totalLoad - totalService;\n% solve minimize totalLoad;\n\n% ann: search_ann = \n%     seq_search([\n%         int_search([mt[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),\n%         int_search([ms[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),\n%         int_search(truck, first_fail, indomain_min)\n%     ]);\n\n% solve :: search_ann minimize weight * totalLoad - totalService;\n\n% output [\"num_maint = \\(num_maint)\\nmt=\\(mt)\\nms=\\(ms)\\ntotalLoad=\\(totalLoad), totalService=\\(totalService)\"];\n\n% constraint totalLoad = 16;\n% constraint totalService = 25;\noutput [\n    \"mt: \", show(mt), \"\\n\",\n    \"ms: \", show(ms), \"\\n\",\n    \"truck: \", show(truck), \"\\n\",\n    \"num_maint: \", show(num_maint), \"\\n\",\n    \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)\n];\n\n% ==== Stage F: Major Maintenance =====\nconstraint forall(t in TRUCK where t != dtruck)(\n    let {\n        % whether the current truck has MJ\n        var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);\n        % the start time of the first MJ service\n        var TIME: first_mj_start = \n            if has_mj \n            then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) \n            else endtime endif;\n        % the end time of the last MJ service\n        var TIME: last_mj_end = \n            if has_mj \n            then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) \n            else 0 endif\n    } in\n    (\n       if has_mj \n       then\n          % total service time before the first MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) \n              + prework[t] <= majorwork\n       else\n          sum(s in SERVICE where truck[s] = t)(service_duration[s]) \n              + prework[t] <= majorwork\n       endif\n    )\n    /\\\n    (\n      if has_mj \n      then\n          % total service time after the last MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork\n      else\n          true\n      endif\n    )\n    /\\\n      forall(m1 in MAINT where mt[t,m1] = MJ)(\n          let {\n              % whether the truck has another MJ\n              var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),\n              % anthoer MJ's start time\n              var TIME: next_mj_start = \n                  if has_next_mj \n                  then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) \n                  else endtime endif\n          } in\n          % total service time between any two MJs\n          sum(s in SERVICE where truck[s] = t /\\ \n              ms[t,m1] + maintdur[MJ] <= start[s] /\\ \n              start[s] < next_mj_start)\n              (service_duration[s]) <= majorwork\n    )\n);\n\n"
+                "snapshot": "%%%% Service and Maintenance scheduling\nint: endtime;                   % latest time to be scheduled\nset of int: TIME = 0..endtime;\nenum SERVICE;                   % services to be scheduled\narray[SERVICE] of TIME: start;  % start time of service\narray[SERVICE] of TIME: end;    % end time of service\nenum STYPE;\narray[SERVICE] of STYPE: stype; % type of each service\n\nenum TRUCK;                      % truck \nTRUCK: dtruck;                   % dummy truck\nenum TTYPE = { SML, MED, LRG, DUMMY };  % truck type\narray[TRUCK] of TTYPE: ttype;    % type of each truck\narray[TRUCK] of int: prework;    % units of work since last major maintenance\nconstraint assert(forall(t in TRUCK)(ttype[t] = DUMMY <-> t = dtruck),\"dummy type only for dtruck\\n\");\narray[TTYPE] of int: maxsty;     % max service types for each truck type\n\nenum MAINTYPE = { NO, SH, LG, MJ }; % NO means no maintenance\narray[MAINTYPE] of int: maintdur; % duration of maintenance\narray[MAINTYPE] of int: maxsep;   % max elapsed time since last maint of this type or higher\nconstraint assert(maintdur[NO] = 0 /\\ maxsep[NO] = 0, \"rules for empty maintenance\\n\");\n\nint: minwork;                   % minimal percentage of time each truck that works is working\nint: minservice;                % minimal percentage of services performed\n\nint: majorwork;                 % amount of work allowed before major maintenance required\n\n\narray[SERVICE] of var TRUCK: truck; % which truck takes each service: dtruck if none\n\nint: maxmaint;\nset of int: MAINT = 1..maxmaint;\narray[TRUCK,MAINT] of var MAINTYPE: mt; % maintenance for each truck NO means not used.\narray[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck\n\ninclude \"globals.mzn\";\n\n\n% ===== Stage A: Assigning Services =====\n% the same truck cannot overlap in time (except dummy truck DD)\narray[SERVICE] of int: service_duration = [end[s] - start[s] | s in SERVICE];\nconstraint forall(t in TRUCK where t != dtruck)(\n    cumulative(\n        [start[s] | s in SERVICE] ++ [ms[t,m] | m in MAINT],\n        [service_duration[s] | s in SERVICE] ++ [maintdur[mt[t,m]] | m in MAINT],\n        [bool2int(truck[s] = t) | s in SERVICE] ++ [bool2int(mt[t,m] != NO) | m in MAINT],\n        1\n    )\n);\n\n% ===== Stage B: Truck Usage, Service Guarantee =====\n% total work time of each truck\narray[TRUCK] of var 0..sum(service_duration): truck_worktime;\nconstraint forall(t in TRUCK)(\n    truck_worktime[t] = sum(s in SERVICE)(\n        bool2int(truck[s] = t) * service_duration[s]\n    )\n);\n           \n% the work time of each truck must meet the threshold - minwork\nconstraint forall(t in TRUCK where t != dtruck)(\n                 (truck_worktime[t] > 0) -> (truck_worktime[t] * 100 >= minwork * endtime)\n);\n\n% the num of completed services\nvar 0..card(SERVICE): services_completed;\nconstraint\n  services_completed =\n    sum(s in SERVICE)(bool2int(truck[s] != dtruck));\n    \n% total completed services must meet the threshold - minservice\nconstraint services_completed * 100 >= minservice * card(SERVICE);\n\n% ===== Stage C: Work Types =====\n% record whether a truck has performed any type of service\narray[TRUCK, STYPE] of var bool: truck_stype_done;\nconstraint forall(t in TRUCK where t != dtruck)(\n              forall(st in STYPE)(\n                truck_stype_done[t, st] = exists(s in SERVICE where truck[s] = t)(stype[s] = st)\n              )     \n);\n\n% each truck (except the dummy one) can be arranged services of at most maxsty[ttype[t]] different types\nconstraint if card(STYPE) > 1 then\n    forall(t in TRUCK where t != dtruck)(\n        sum(st in STYPE)(truck_stype_done[t, st]) <= maxsty[ttype[t]]\n    )\nelse\n    true\nendif;\n\n                 \n% ===== Stage D: Maintenance =====\n% D0 - dummy truck do not need maintenance\nconstraint forall(m in MAINT)( mt[dtruck,m] = NO );\n\n% D1 - truck not use don't need maintenance\nconstraint forall(t in TRUCK where t != dtruck) (\n                 (truck_worktime[t] = 0) ->\n                 forall(m in MAINT)(mt[t,m] = NO)\n);\n               \n% D2 - make sure all the NO maintenances appear at the end of the list for each truck\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint - 1)(\n                  mt[t, m] = NO -> mt[t, m + 1] = NO    \n);\n\n% D3 - make sure other maintenances appear in order of increasing start time\nconstraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint-1)(\n    (mt[t,m] != NO /\\ mt[t,m+1] != NO) -> \n    (ms[t,m] + maintdur[mt[t,m]] <= ms[t, m+1] /\\ ms[t,m] <= ms[t, m+1])\n);\n\n% D4 - make sure maintenance and service time don't overlap\nconstraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(\n                 (truck[s] = t /\\ mt[t, m] != NO) -> \n                 (start[s] + service_duration[s] <= ms[t, m] \\/\n                  ms[t, m] + maintdur[mt[t, m]] <= start[s])\n);\n\n% D5 - there must be a SH/LG or MJ maintenance within maxsep[SH] of the start\n% maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]\narray[TRUCK] of var set of MAINT: possible_maint = \n  [ {m | m in MAINT where mt[t, m] != NO /\\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];\nconstraint forall(t in TRUCK where t != dtruck /\\ truck_worktime[t] > 0) (\n                  card(possible_maint[t]) > 0\n);\n\n% D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule\nconstraint forall(t in TRUCK  where t != dtruck /\\ truck_worktime[t] > 0) (\n                  exists(m in MAINT) (\n                         mt[t, m] in {LG, MJ} /\\ ms[t, m] <= maxsep[LG]\n                  )\n);\n\n% D7 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]\nconstraint\n  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(\n        let {\n            % the end time of maintenance m1\n            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]\n        } in\n          % if end_time_m1 + maxsep[LG] is less than endtime, \n          % there must be another maintenance task m2：\n          if end_time_m1 + maxsep[LG] < endtime then\n            exists(m2 in MAINT where m2 > m1)(\n              % the start time of m2 is within maxsep[SH] after m1\n              mt[t, m2] in {LG, MJ} /\\ ms[t, m2] <= end_time_m1 + maxsep[LG]\n            )\n          else\n            true\n          endif\n  );\n  \n% D8 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]\nconstraint\n  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] != NO)(\n        let {\n            % the end time of maintenance m1\n            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]\n        } in\n          % if end_time_m1 + maxsep[SH] is less than endtime, \n          % there must be another maintenance task m2：\n          if end_time_m1 + maxsep[SH] < endtime then\n            exists(m2 in MAINT where m2 > m1)(\n              % the start time of m2 is within maxsep[SH] after m1\n              mt[t, m2] != NO /\\ ms[t, m2] <= end_time_m1 + maxsep[SH]\n            )\n          else\n            true\n          endif\n  );\n\n  \n% ===== Stage E: Objective =====\n% store the number of maintenance tasks for each time t\narray[0..endtime - 1] of var 0..card(TRUCK) * maxmaint: num_maint;\nconstraint\n  forall(t in 0..endtime - 1) (\n    num_maint[t] =\n      sum(tk in TRUCK, m in MAINT where mt[tk, m] != NO)(\n        bool2int(mt[tk, m] != NO /\\ ms[tk, m] <= t /\\ t < ms[tk, m] + maintdur[mt[tk, m]])\n      )\n  );\n\nint: max_total_service = sum(service_duration);\n\n% total duration of services\nvar 0..max_total_service: totalService = \n    sum(s in SERVICE)(bool2int(truck[s] != dtruck) * service_duration[s]);\n\n% total maintenance load\nvar 0..card(TRUCK)*maxmaint*card(TRUCK)*maxmaint*endtime: totalLoad = \n    sum(t in 0..endtime-1)(num_maint[t] * num_maint[t]);\n\n% assume a weight\nint: service_time_max = card(SERVICE) * endtime;\nint: weight = service_time_max + 1;\n\nsolve minimize weight * totalLoad - totalService;\n% solve minimize totalLoad;\n\n% ann: search_ann = \n%     seq_search([\n%         int_search([mt[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),\n%         int_search([ms[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),\n%         int_search(truck, first_fail, indomain_min)\n%     ]);\n\n% solve :: search_ann minimize weight * totalLoad - totalService;\n\n% output [\"num_maint = \\(num_maint)\\nmt=\\(mt)\\nms=\\(ms)\\ntotalLoad=\\(totalLoad), totalService=\\(totalService)\"];\n\n% constraint totalLoad = 16;\n% constraint totalService = 25;\n% output [\n%     \"mt: \", show(mt), \"\\n\",\n%     \"ms: \", show(ms), \"\\n\",\n%     \"truck: \", show(truck), \"\\n\",\n%     \"num_maint: \", show(num_maint), \"\\n\",\n%     \"totalLoad: \", show(totalLoad), \" totalService: \", show(totalService)\n% ];\n\n% ==== Stage F: Major Maintenance =====\nconstraint forall(t in TRUCK where t != dtruck)(\n    let {\n        % whether the current truck has MJ\n        var bool: has_mj = exists(m in MAINT)(mt[t,m] = MJ);\n        % the start time of the first MJ service\n        var TIME: first_mj_start = \n            if has_mj \n            then min([ms[t,m] | m in MAINT where mt[t,m] = MJ]) \n            else endtime endif;\n        % the end time of the last MJ service\n        var TIME: last_mj_end = \n            if has_mj \n            then max([ms[t,m] + maintdur[MJ] | m in MAINT where mt[t,m] = MJ]) \n            else 0 endif\n    } in\n    (\n       if has_mj \n       then\n          % total service time before the first MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] < first_mj_start)(service_duration[s]) \n              + prework[t] <= majorwork\n       else\n          sum(s in SERVICE where truck[s] = t)(service_duration[s]) \n              + prework[t] <= majorwork\n       endif\n    )\n    /\\\n    (\n      if has_mj \n      then\n          % total service time after the last MJ\n          sum(s in SERVICE where truck[s] = t /\\ start[s] >= last_mj_end)(service_duration[s]) <= majorwork\n      else\n          true\n      endif\n    )\n    /\\\n      forall(m1 in MAINT where mt[t,m1] = MJ)(\n          let {\n              % whether the truck has another MJ\n              var bool: has_next_mj = exists(m2 in m1+1..maxmaint)(mt[t,m2] = MJ),\n              % anthoer MJ's start time\n              var TIME: next_mj_start = \n                  if has_next_mj \n                  then min([ms[t,m2] | m2 in m1+1..maxmaint where mt[t,m2] = MJ]) \n                  else endtime endif\n          } in\n          % total service time between any two MJs\n          sum(s in SERVICE where truck[s] = t /\\ \n              ms[t,m1] + maintdur[MJ] <= start[s] /\\ \n              start[s] < next_mj_start)\n              (service_duration[s]) <= majorwork\n    )\n);\n\n\n% %%%%% symmetry breaking for same services: same start/end => enforce truck order %%%%%\n% %%%%% focus on dataset like service8 %%%%%\nconstraint forall(i, j in SERVICE where i < j /\\ start[i] = start[j] /\\ end[i] = end[j])(\n      truck[i] <= truck[j]\n);\n\n% %%%%% extra constraint about Variable Bounds %%%%%\nconstraint forall(t in TRUCK, m in MAINT)(\n      ms[t, m] + maintdur[mt[t, m]] <= endtime\n);\n"
             }
         },
-        "parent": "a29e459f-a3dc-4288-9c2c-99a437b902f1",
-        "uuid": "eefc103b-64d4-49d0-831d-e117d3fa943d"
+        "parent": "f9f2b818-64f0-4edd-a21d-352bb68613bf",
+        "uuid": "b330f89e-3446-4c4c-801a-e0c0bad2781c"
     },
     "modelAssignments": [
         {
