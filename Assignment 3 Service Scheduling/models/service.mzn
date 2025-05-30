@@ -35,7 +35,6 @@ array[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck
 
 include "globals.mzn";
 
-
 % ===== Stage A: Assigning Services =====
 % the same truck cannot overlap in time (except dummy truck DD)
 array[SERVICE] of int: service_duration = [end[s] - start[s] | s in SERVICE];
@@ -196,30 +195,7 @@ var 0..card(TRUCK)*maxmaint*card(TRUCK)*maxmaint*endtime: totalLoad =
 % assume a weight
 int: service_time_max = card(SERVICE) * endtime;
 int: weight = service_time_max + 1;
-
 solve minimize weight * totalLoad - totalService;
-% solve minimize totalLoad;
-
-% ann: search_ann = 
-%     seq_search([
-%         int_search([mt[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),
-%         int_search([ms[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),
-%         int_search(truck, first_fail, indomain_min)
-%     ]);
-
-% solve :: search_ann minimize weight * totalLoad - totalService;
-
-% output ["num_maint = \(num_maint)\nmt=\(mt)\nms=\(ms)\ntotalLoad=\(totalLoad), totalService=\(totalService)"];
-
-% constraint totalLoad = 16;
-% constraint totalService = 25;
-% output [
-%     "mt: ", show(mt), "\n",
-%     "ms: ", show(ms), "\n",
-%     "truck: ", show(truck), "\n",
-%     "num_maint: ", show(num_maint), "\n",
-%     "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
-% ];
 
 % ==== Stage F: Major Maintenance =====
 constraint forall(t in TRUCK where t != dtruck)(
@@ -278,13 +254,27 @@ constraint forall(t in TRUCK where t != dtruck)(
 );
 
 
-% %%%%% symmetry breaking for same services: same start/end => enforce truck order %%%%%
-% %%%%% focus on dataset like service8 %%%%%
+% Symmetry breaking:
+% focus on dataset like service8: enforce truck order for same service (same start/end) 
 constraint forall(i, j in SERVICE where i < j /\ start[i] = start[j] /\ end[i] = end[j])(
       truck[i] <= truck[j]
 );
 
-% %%%%% extra constraint about Variable Bounds %%%%%
+% Variable Bounds: extra constraint about Variable Bounds
 constraint forall(t in TRUCK, m in MAINT)(
       ms[t, m] + maintdur[mt[t, m]] <= endtime
 );
+
+% Redundant constraint: when majorwork > totalservicetime + max(prework), means no MJ needed
+int: total_service_dur = sum(s in SERVICE)(end[s] - start[s]);
+constraint majorwork >= total_service_dur + max(prework) ->
+    forall(t in TRUCK, m in MAINT)(mt[t,m] != MJ);
+
+
+% output [
+%     "mt: ", show(mt), "\n",
+%     "ms: ", show(ms), "\n",
+%     "truck: ", show(truck), "\n",
+%     "num_maint: ", show(num_maint), "\n",
+%     "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
+% ];
