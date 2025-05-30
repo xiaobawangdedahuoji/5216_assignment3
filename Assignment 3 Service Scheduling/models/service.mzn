@@ -35,10 +35,6 @@ array[TRUCK,MAINT] of var TIME: ms;     % maintenance start time for each truck
 
 include "globals.mzn";
 
-% ===== extra constraint about Variable Bounds =====
-constraint forall(t in TRUCK, m in MAINT)(
-    ms[t, m] + maintdur[mt[t, m]] <= endtime
-);
 
 % ===== Stage A: Assigning Services =====
 % the same truck cannot overlap in time (except dummy truck DD)
@@ -52,30 +48,27 @@ constraint forall(t in TRUCK where t != dtruck)(
     )
 );
 
-% %%%%% symmetry breaking for same services: same start/end => enforce truck order (SPECIAL#1) %%%%%
-constraint forall(i, j in SERVICE where i < j /\ start[i] = start[j] /\ end[i] = end[j])(
-      truck[i] <= truck[j]
-);
-
-
 % ===== Stage B: Truck Usage, Service Guarantee =====
 % total work time of each truck
-array[TRUCK] of var 0..endtime: truck_worktime;
+array[TRUCK] of var 0..sum(service_duration): truck_worktime;
 constraint forall(t in TRUCK)(
     truck_worktime[t] = sum(s in SERVICE)(
         bool2int(truck[s] = t) * service_duration[s]
     )
-);         
-% B1 the work time of each truck must meet the threshold - minwork
+);
+           
+% the work time of each truck must meet the threshold - minwork
 constraint forall(t in TRUCK where t != dtruck)(
                  (truck_worktime[t] > 0) -> (truck_worktime[t] * 100 >= minwork * endtime)
 );
+
 % the num of completed services
 var 0..card(SERVICE): services_completed;
 constraint
   services_completed =
-    sum(s in SERVICE)(bool2int(truck[s] != dtruck)); 
-% B2 total completed services must meet the threshold - minservice
+    sum(s in SERVICE)(bool2int(truck[s] != dtruck));
+    
+% total completed services must meet the threshold - minservice
 constraint services_completed * 100 >= minservice * card(SERVICE);
 
 % ===== Stage C: Work Types =====
@@ -103,7 +96,8 @@ constraint forall(m in MAINT)( mt[dtruck,m] = NO );
 
 % D1 - truck not use don't need maintenance
 constraint forall(t in TRUCK where t != dtruck) (
-                  truck_worktime[t] = 0 -> forall(m in MAINT)(mt[t,m] = NO /\ ms[t, m] = 0)
+                 (truck_worktime[t] = 0) ->
+                 forall(m in MAINT)(mt[t,m] = NO)
 );
                
 % D2 - make sure all the NO maintenances appear at the end of the list for each truck
@@ -114,103 +108,81 @@ constraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint - 1)(
 % D3 - make sure other maintenances appear in order of increasing start time
 constraint forall(t in TRUCK where t != dtruck, m in 1..maxmaint-1)(
     (mt[t,m] != NO /\ mt[t,m+1] != NO) -> 
-    (ms[t,m] + maintdur[mt[t,m]] <= ms[t,m+1] /\ ms[t,m] <= ms[t, m+1])
+    (ms[t,m] + maintdur[mt[t,m]] <= ms[t,m+1])
 );
 
-% D4 - make sure maintenance and service time don't overlap === [remove, covered by cumulative from Stage A]
-% constraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(
-%                  (truck[s] = t /\ mt[t, m] != NO) -> 
-%                  (start[s] + service_duration[s] <= ms[t, m] \/
-%                   ms[t, m] + maintdur[mt[t, m]] <= start[s])
-% );
+% D4 - make sure maintenance and service time don't overlap
+constraint forall(t in TRUCK where t != dtruck, m in MAINT, s in SERVICE)(
+                 (truck[s] = t /\ mt[t, m] != NO) -> 
+                 (start[s] + service_duration[s] <= ms[t, m] \/
+                  ms[t, m] + maintdur[mt[t, m]] <= start[s])
+);
 
 % D5 - there must be a SH/LG or MJ maintenance within maxsep[SH] of the start
-% way 1
-constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0)(
-                  exists(m in MAINT) (mt[t,m] != NO /\ ms[t,m] <= maxsep[SH])
+% maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]
+array[TRUCK] of var set of MAINT: possible_maint = 
+  [ {m | m in MAINT where mt[t, m] != NO /\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];
+constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
+                  card(possible_maint[t]) > 0
 );
 
-% way 2: maintain a list for each truck containing all maintenance tasks that can possibly start within maxsep[SH]
-% array[TRUCK] of var set of MAINT: possible_maint = 
-%   [ {m | m in MAINT where mt[t, m] != NO /\ ms[t, m] <= maxsep[SH]} | t in TRUCK ];
 % constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
-%                   card(possible_maint[t]) > 0
+%                   exists(m in MAINT) (
+%                          mt[t,m] != NO /\ ms[t,m] <= maxsep[SH]
+%                   )  
 % );
 
 % D6 - There must be a LG or MJ maintenance within maxsep[LG] of the start of the schedule
+% array[TRUCK] of var set of MAINT: possible_maint_LG = 
+%   [ {m | m in MAINT where mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG]} | t in TRUCK ];
+% constraint forall(t in TRUCK where t != dtruck /\ truck_worktime[t] > 0) (
+%                   card(possible_maint_LG[t]) > 0
+% );
 constraint forall(t in TRUCK  where t != dtruck /\ truck_worktime[t] > 0) (
-                  exists(m in MAINT) (mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG])
+                  exists(m in MAINT) (
+                         mt[t, m] in {LG, MJ} /\ ms[t, m] <= maxsep[LG]
+                  )
 );
 
-% D7 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]
-% way 1
-constraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t,m1] != NO)(
-    ms[t,m1] + maintdur[mt[t,m1]] + maxsep[SH] >= endtime 
-    \/ exists(m2 in MAINT where m2>m1)(
-         mt[t,m2] != NO /\ ms[t,m2] <= ms[t,m1] + maintdur[mt[t,m1]] + maxsep[SH]
-       )
-);
+% D7 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]
+constraint
+  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(
+        let {
+            % the end time of maintenance m1
+            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]
+        } in
+          % if end_time_m1 + maxsep[LG] is less than endtime, 
+          % there must be another maintenance task m2：
+          if end_time_m1 + maxsep[LG] < endtime then
+            exists(m2 in MAINT where m2 > m1)(
+              % the start time of m2 is within maxsep[SH] after m1
+              mt[t, m2] in {LG, MJ} /\ ms[t, m2] <= end_time_m1 + maxsep[LG]
+            )
+          else
+            true
+          endif
+  );
+  
+% D8 - make sure there is another SH/LG or MJ after every SH/LG or MJ within maxsep[SH]
+constraint
+  forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] != NO)(
+        let {
+            % the end time of maintenance m1
+            var TIME: end_time_m1 = ms[t, m1] + maintdur[mt[t, m1]]
+        } in
+          % if end_time_m1 + maxsep[SH] is less than endtime, 
+          % there must be another maintenance task m2：
+          if end_time_m1 + maxsep[SH] < endtime then
+            exists(m2 in MAINT where m2 > m1)(
+              % the start time of m2 is within maxsep[SH] after m1
+              mt[t, m2] != NO /\ ms[t, m2] <= end_time_m1 + maxsep[SH]
+            )
+          else
+            true
+          endif
+  );
 
-% ======== way 2 START =========
-% array[TRUCK, MAINT] of var TIME: end_time_maint;  % the end time for each maintenance task:
-% constraint forall(t in TRUCK, m in MAINT)(end_time_maint[t,m] = ms[t,m] + maintdur[mt[t,m]]);
-
-% % the set of possible next maintenances m2 for each truck t and each maintenance task m1
-% array[TRUCK, MAINT] of var set of MAINT: next_maint = 
-%   array2d(TRUCK, MAINT,
-%     [ { m2 | m2 in MAINT 
-%         where 
-%              m2 > m1 /\ mt[t,m2] != NO /\ ms[t,m2] 
-%              <= end_time_maint[t,m1] + maxsep[SH] 
-%       }
-%       | t in TRUCK, m1 in MAINT
-%     ]
-%   );
-
-% % either the task ends late enough (> endtime),
-% % or there exists at least one suitable follow-up task m2 in the next_maint set
-% constraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t,m1] != NO)(
-%                   end_time_maint[t,m1] + maxsep[SH] >= endtime \/
-%                   card(next_maint[t, m1]) > 0
-% );
-% =========== way 2 END ===========
-
-
-% D8 - make sure there is another LG or MJ after every LG or MJ within maxsep[LG]
-% way 1
-constraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t,m1] in {LG,MJ})(
-    ms[t,m1] + maintdur[mt[t,m1]] + maxsep[LG] >= endtime
-    \/ exists(m2 in MAINT where m2>m1)(
-         mt[t,m2] in {LG,MJ} /\ ms[t,m2] <= ms[t,m1] + maintdur[mt[t,m1]] + maxsep[LG]
-       )
-);
-
-% ======== way 2 START =========
-% array[TRUCK, MAINT] of var TIME: end_time_maint2;  % the end time for each maintenance task(LG or MJ):
-% constraint forall(t in TRUCK, m in MAINT where mt[t, m] in {LG, MJ})(end_time_maint2[t,m] = ms[t,m] + maintdur[mt[t,m]]);
-
-% the set of possible next maintenances m2 for each truck t and each maintenance task m1
-% array[TRUCK, MAINT] of var set of MAINT: next_maint2 = 
-%   array2d(TRUCK, MAINT,
-%     [ { m2 | m2 in MAINT 
-%         where 
-%              mt[t, m1] in {LG, MJ} /\ mt[t, m2] in {LG, MJ} /\
-%              m2 > m1 /\ mt[t,m2] != NO /\ ms[t,m2] 
-%              <= end_time_maint2[t,m1] + maxsep[LG] 
-%       }
-%       | t in TRUCK, m1 in MAINT 
-%     ]
-%   );
-
-% % either the task ends late enough (> endtime),
-% % or there exists at least one suitable follow-up task m2 in the next_maint2 set
-% constraint forall(t in TRUCK where t != dtruck, m1 in MAINT where mt[t, m1] in {LG, MJ})(
-%                   end_time_maint2[t,m1] + maxsep[LG] >= endtime \/
-%                   card(next_maint2[t, m1]) > 0
-% );
-% =========== way 2 END ===========
-
-
+  
 % ===== Stage E: Objective =====
 % store the number of maintenance tasks for each time t
 array[0..endtime - 1] of var 0..card(TRUCK) * maxmaint: num_maint;
@@ -236,6 +208,29 @@ var 0..card(TRUCK)*maxmaint*card(TRUCK)*maxmaint*endtime: totalLoad =
 int: service_time_max = card(SERVICE) * endtime;
 int: weight = service_time_max + 1;
 
+solve minimize weight * totalLoad - totalService;
+% solve minimize totalLoad;
+
+% ann: search_ann = 
+%     seq_search([
+%         int_search([mt[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),
+%         int_search([ms[t,m] | t in TRUCK, m in MAINT], first_fail, indomain_min),
+%         int_search(truck, first_fail, indomain_min)
+%     ]);
+
+% solve :: search_ann minimize weight * totalLoad - totalService;
+
+% output ["num_maint = \(num_maint)\nmt=\(mt)\nms=\(ms)\ntotalLoad=\(totalLoad), totalService=\(totalService)"];
+
+% constraint totalLoad = 16;
+% constraint totalService = 25;
+output [
+    "mt: ", show(mt), "\n",
+    "ms: ", show(ms), "\n",
+    "truck: ", show(truck), "\n",
+    "num_maint: ", show(num_maint), "\n",
+    "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
+];
 
 % ==== Stage F: Major Maintenance =====
 constraint forall(t in TRUCK where t != dtruck)(
@@ -293,28 +288,3 @@ constraint forall(t in TRUCK where t != dtruck)(
     )
 );
 
-% ===== extra constraints for eliminate symmetry =====
-
-
-% ===== extra constraints for pruning =====
-array[TRUCK] of var 0..maxmaint: num_maint_tasks;
-constraint forall(t in TRUCK)(
-    num_maint_tasks[t] = sum(m in MAINT)(bool2int(mt[t,m] != NO))
-);
-constraint sum(t in TRUCK where t != dtruck)(num_maint_tasks[t]) <= card(TRUCK) * maxmaint;
-
-
-% ====================== SOLVE ============================
-solve minimize weight * totalLoad - totalService;
-% solve minimize totalLoad;
-
-% constraint totalLoad = 16 \/ totalLoad <= 9;
-% constraint totalService = 25;
-
-% output [
-%     "mt: ", show(mt), "\n",
-%     "ms: ", show(ms), "\n",
-%     "truck: ", show(truck), "\n",
-%     "num_maint: ", show(num_maint), "\n",
-%     "totalLoad: ", show(totalLoad), " totalService: ", show(totalService)
-% ];
