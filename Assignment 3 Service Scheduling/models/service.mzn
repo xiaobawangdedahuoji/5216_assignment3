@@ -260,6 +260,12 @@ constraint forall(i, j in SERVICE where i < j /\ start[i] = start[j] /\ end[i] =
       truck[i] <= truck[j]
 );
 
+% break symmetry between trucks of the same type
+constraint forall(t1, t2 in TRUCK where t1 < t2 /\ ttype[t1] = ttype[t2]) (
+  min([start[s] | s in SERVICE where truck[s] = t1] ++ [endtime+1]) <=
+  min([start[s] | s in SERVICE where truck[s] = t2] ++ [endtime+1])
+);
+
 % Variable Bounds: extra constraint about Variable Bounds
 constraint forall(t in TRUCK, m in MAINT)(
       ms[t, m] + maintdur[mt[t, m]] <= endtime
